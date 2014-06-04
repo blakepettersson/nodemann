@@ -8,28 +8,35 @@ server.listen(settings.port, function() {
   console.log('server listening on port ' + settings.port);
 });
 
-var connection = rx.Observable.fromEvent(server, "connection").map(function(socket) {
+var connection = rx.Observable.fromEvent(server, 'connection').map(function(socket) {
   socket.setKeepAlive(settings.keepAlive);
   return socket;
 });
 
 var messages = connection.flatMap(function(socket) {
-  var end = rx.Observable.fromEvent(socket, "end");
-  var data = rx.Observable.fromEvent(socket, "data");
+  var end = rx.Observable.fromEvent(socket, 'end');
+  var data = rx.Observable.fromEvent(socket, 'data');
   
   var finished = data.concat(end);
 
   return finished.map(function(bytes) {
     var message = serializer.deserializeMessage(bytes.slice(4));
     var ack = serializer.serializeMessage({ok: true});
-    socket.write(padMessage(ack));
+    socket.write(_setResponseLength(ack));
     return message;
   });
+}).flatMap(function(message) {
+  return rx.Observable.fromArray(message.events);
 });
 
-exports.messages = messages;
+function _getResponseLength(chunk) {
+  return (chunk[0] << 24) +
+         (chunk[1] << 16) +
+         (chunk[2] << 8)  +
+         (chunk[3]);
+}
 
-function padMessage(payload) {
+function _setResponseLength(payload) {
   var len = payload.length;
   var packet = new Buffer(len + 4);
   packet[0] = len >>> 24 & 0xFF;
@@ -39,3 +46,5 @@ function padMessage(payload) {
   payload.copy(packet, 4, 0);
   return packet;
 }
+
+exports.messages = messages;
