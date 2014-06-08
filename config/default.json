@@ -1,6 +1,6 @@
 {
     "settings": {
-      "port": "6666",
+      "port": "5555",
       "keepAlive": "true"
     }
 }
