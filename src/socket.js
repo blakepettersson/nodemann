@@ -13,9 +13,13 @@ var stream = function(connection, socketFunc) {
 	    var message = serializer.deserializeMessage(bytes.slice(4));
 	    var ack = serializer.serializeMessage({ok: true});
 
-	    socketFunc(socket, ack);
+	    socketFunc(socket, _setResponseLength(ack));
 	    return message;
-	  });
+	  }).catch(function(error) {
+        var ack = serializer.serializeMessage({ok: false, error: error});
+        socketFunc(socket, _setResponseLength(ack));
+        return rx.Observable.empty();
+      });
 	}).flatMap(function(message) {
 	  return rx.Observable.fromArray(message.events);
 	});

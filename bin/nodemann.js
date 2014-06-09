@@ -1,5 +1,4 @@
 var net = require('net');
-var s = require('../src/socket')
 var connection = require("../src/connection");
 var settings = require('config').settings;
 
@@ -9,7 +8,7 @@ server.listen(settings.port, function() {
 });
 
 var messages = connection.stream(server, settings.keepAlive, function(socket, message) {
-	socket.write(s.setResponseLength(message));
+	socket.write(message);
 });
 
 exports.messages = messages;
