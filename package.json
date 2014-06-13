@@ -5,7 +5,8 @@
   "dependencies": {
     "rx": "2.2.x",
     "riemann": "0.4.x",
-    "config": "0.4.x"
+    "config": "0.4.x",
+    "node-cache": "1.0.x"
   },
   "devDependencies": {
     "grunt": "~0.4.5",
