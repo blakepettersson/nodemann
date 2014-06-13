@@ -1,6 +1,8 @@
 {
     "settings": {
       "port": "5555",
-      "keepAlive": "true"
+      "keepAlive": "true",
+      "ttl": "60",
+      "checkPeriod": "60"
     }
 }
