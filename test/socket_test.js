@@ -30,7 +30,7 @@ describe('stream', function() {
 
     	var res = scheduler.startWithCreate(function() {
     		return xs.map(function(x) { 
-    			emitter.emit('data', socket.setResponseLength(serializer.serializeMessage({ok: true, events: [{"time":"1402237848","state":"critical","service":"disk /Volumes/Flash","host":"Blakes-MacBook-Pro.local","description":"100% used","ttl":10,"metricF":1}]})));
+    			emitter.emit('data', socket.setResponseLength(serializer.serializeMessage({ok: true, events: [{"time":"1402237848","state":"critical","service":"disk /Volumes/Flash","host":"localhost","description":"yes","ttl":10,"metricF":1}]})));
     			emitter.emit('end');
     		}); 
     	});
@@ -59,6 +59,48 @@ describe('stream', function() {
                 emitter.emit('data', 'some crappy data');
                 emitter.emit('end');
             }); 
+        });
+    })
+
+    it('should still recieve future messages if a message has failed somehow', function(done) {
+        
+        function emitter(index) {
+            var spy = sinon.spy();
+            var emitter = new EventEmitter();
+            emitter.on('data', spy);
+            emitter.on('end', spy);
+            return emitter;
+        }
+
+        var scheduler = new rx.TestScheduler();
+        var xs = scheduler.createColdObservable(
+            onNext(1, emitter()),
+            onNext(2, emitter())
+        )
+
+        var index = 0;
+
+        var writeCallback = function(s, message) {
+        };
+
+        socket.stream(xs, writeCallback).subscribe(function(message) {
+            done();
+        });
+
+        var res = scheduler.startWithCreate(function() {
+            return xs.map(function(x, index) {
+                if(index === 1) {
+                    console.log('emitting crappy data ');
+                    x.emit('data', 'some crappy data');
+                    x.emit('end'); 
+                } else {
+                    console.log('emitting good data ');
+                    var message = socket.setResponseLength(serializer.serializeMessage({ok: true, events: [{"time":"1402237848","state":"critical","service":"disk /Volumes/Flash","host":"localhost","description":"yes","ttl":10,"metricF":1}]}));
+                    x.emit('data', message);
+                    x.emit('end');
+                }
+                return x;
+            })
         });
     })
 })
