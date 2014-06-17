@@ -18,7 +18,7 @@ var stream = function(connection, socketFunc) {
             socketFunc(socket, _setResponseLength(ack));
             return message;
         }).catch(function(error) {
-            console.error("Error when trying to serialize message: " + error);
+            console.error("Error when trying to deserialize message: " + error);
             var ack = serializer.serializeMessage({
                 ok: false,
                 error: error
