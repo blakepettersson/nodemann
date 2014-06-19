@@ -92,7 +92,6 @@ describe('An example subscription', function() {
         var index = 0;
         var xs = helper.scheduleMessages([ok, critical, ok, ok, ok, ok]);
 
-
         socket.stream(xs.observables, function(s, message) {})
             .groupBy(function(message) {
                 return message.service;
@@ -113,6 +112,81 @@ describe('An example subscription', function() {
                 }
 
                 index++;
+            });
+
+        xs.start();
+    })
+
+    it('should be able to react on state changes for multiple hosts', function(done) {
+        var host1ok = {
+            ok: true,
+            events: [{
+                "state": "ok",
+                "service": "service1",
+                "host": "host1",
+                "ttl": 10
+            }]
+        };
+        var host2ok = {
+            ok: true,
+            events: [{
+                "state": "ok",
+                "service": "service1",
+                "host": "host2",
+                "ttl": 10
+            }]
+        };
+
+        var host1critical = {
+            ok: true,
+            events: [{
+                "state": "critical",
+                "service": "service1",
+                "host": "host1",
+                "ttl": 10
+            }]
+        };
+        var host2critical = {
+            ok: true,
+            events: [{
+                "state": "critical",
+                "service": "service1",
+                "host": "host2",
+                "ttl": 10
+            }]
+        };
+
+        var index = 0;
+        var xs = helper.scheduleMessages([host1ok, host2ok, host2ok, host1critical, host1ok, host1ok, host1ok, host1ok, host2critical]);
+
+        socket.stream(xs.observables, function(s, message) {})
+            .groupBy(function(message) {
+                return message.host;
+            })
+            .flatMap(function(message) {
+                return message.distinctUntilChanged(function(event) {
+                    return event.state;
+                });
+            })
+            .subscribe(function(message) {
+                console.log(message);
+                console.log(index);
+                index++;
+
+                if (index === 4)
+                    done();
+                /*
+                if (index === 0)
+                    message.state.should.eql("ok");
+                if (index === 1)
+                    message.state.should.eql("critical");
+                if (index === 2) {
+                    message.state.should.eql("ok");
+                    done();
+                }
+
+                index++;
+                */
             });
 
         xs.start();
