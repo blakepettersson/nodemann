@@ -164,31 +164,79 @@ describe('An example subscription', function() {
                 return message.host;
             })
             .flatMap(function(message) {
-                return message.distinctUntilChanged(function(event) {
-                    return event.state;
-                });
+                return message
+                    .skipWhile(function(event) {
+                        return event.state === "ok"
+                    })
+                    .distinctUntilChanged(function(event) {
+                        return event.state;
+                    });
             })
             .subscribe(function(message) {
-                console.log(message);
-                console.log(index);
-                index++;
-
-                if (index === 4)
-                    done();
-                /*
-                if (index === 0)
-                    message.state.should.eql("ok");
-                if (index === 1)
+                if (index === 0) {
+                    message.host.should.eql("host1");
                     message.state.should.eql("critical");
-                if (index === 2) {
+                }
+                if (index === 1) {
+                    message.host.should.eql("host1");
                     message.state.should.eql("ok");
+                }
+                if (index === 2) {
+                    message.host.should.eql("host2");
+                    message.state.should.eql("critical");
                     done();
                 }
 
                 index++;
-                */
             });
 
         xs.start();
     })
+
+    it('should be able to measure metrics per host', function(done) {
+        var host1 = {
+            ok: true,
+            events: [{
+                "state": "ok",
+                "service": "service1",
+                "host": "host1",
+                "ttl": 10,
+                "metricF": 1
+            }]
+        };
+        var host2 = {
+            ok: true,
+            events: [{
+                "state": "ok",
+                "service": "service1",
+                "host": "host2",
+                "ttl": 10,
+                "metricF": 1
+            }]
+        };
+
+        var index = 0;
+        var xs = helper.scheduleMessages([host1, host2, host1, host1, host2, host2, host1, host2]);
+
+        socket.stream(xs.observables, function(s, message) {})
+            .groupBy(function(message) {
+                return message.host;
+            })
+            .flatMap(function(host) {
+                return host.windowWithCount(2).flatMap(function(event) {
+                    return event.toArray();
+                })
+            })
+            .subscribe(function(message) {
+                //Output to Graphite or whatever here.
+                console.log(message);
+                index++;
+                if (index == 3) {
+                    done();
+                }
+            });
+
+        xs.start();
+    })
+
 })
