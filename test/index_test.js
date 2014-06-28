@@ -4,9 +4,8 @@ var EventEmitter = require('events').EventEmitter;
 var onNext = rx.ReactiveTest.onNext;
 var onCompleted = rx.ReactiveTest.onCompleted;
 var subscribe = rx.ReactiveTest.subscribe;
-var should = require('should');
-var assert = require('assert');
 var index = require('../src/index');
+var expect = require('chai').expect;
 var NodeCache = require("node-cache");
 
 describe('index', function() {
@@ -24,7 +23,7 @@ describe('index', function() {
             service: "test",
             ttl: 1
         }).subscribe(function(e) {
-            e.state.should.eql("expired");
+            expect(e.state).to.equal("expired");
             done();
         });
     })

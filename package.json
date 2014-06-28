@@ -9,12 +9,13 @@
     "node-cache": "1.0.x"
   },
   "devDependencies": {
+    "chai": "^1.9.1",
     "grunt": "~0.4.5",
     "grunt-jsbeautifier": "^0.2.7",
     "grunt-mocha-test": "^0.11.0",
     "mocha": "1.20.x",
-    "should": "^4.0.4",
-    "sinon": "1.10.x"
+    "sinon": "1.10.x",
+    "ws": "^0.4.31"
   },
   "engine": "node >= 0.10.x"
 }

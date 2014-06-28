@@ -1,8 +1,7 @@
 var rx = require('rx');
 var socket = require('../src/socket')
 var helper = require('../src/helpers/test_helpers')
-var should = require('should');
-var assert = require('assert');
+var expect = require('chai').expect;
 
 describe('An example subscription', function() {
     it('should be able to filter based on host', function(done) {
@@ -12,6 +11,7 @@ describe('An example subscription', function() {
                 "state": "critical",
                 "service": "disk /Volumes/Flash",
                 "host": "host1",
+                "tags": ["a", "b", "c"],
                 "ttl": 10
             }]
         };
@@ -21,6 +21,7 @@ describe('An example subscription', function() {
                 "state": "critical",
                 "service": "disk /Volumes/Flash",
                 "host": "host2",
+                "tags": ["a", "b", "c"],
                 "ttl": 10
             }]
         };
@@ -30,12 +31,18 @@ describe('An example subscription', function() {
         socket.stream(xs.observables, function(s, message) {}).filter(function(message) {
             return message.host === "host1";
         }).subscribe(function(message) {
-            message.should.eql(host1.events[0]);
-            done();
+            try {
+                expect(message).to.deep.equal(host1.events[0]);
+                done();
+            } catch (err) {
+                done(err);
+            }
         });
 
         xs.start();
     })
+
+
 
     it('should be able to filter based on service', function(done) {
         var service1 = {
@@ -44,6 +51,7 @@ describe('An example subscription', function() {
                 "state": "critical",
                 "service": "service1",
                 "host": "host1",
+                "tags": ["a", "b", "c"],
                 "ttl": 10
             }]
         };
@@ -53,6 +61,7 @@ describe('An example subscription', function() {
                 "state": "critical",
                 "service": "service2",
                 "host": "host1",
+                "tags": ["a", "b", "c"],
                 "ttl": 10
             }]
         };
@@ -62,8 +71,12 @@ describe('An example subscription', function() {
         socket.stream(xs.observables, function(s, message) {}).filter(function(message) {
             return message.service === "service1";
         }).subscribe(function(message) {
-            message.should.eql(service1.events[0]);
-            done();
+            try {
+                expect(message).to.deep.equal(service1.events[0]);
+                done();
+            } catch (err) {
+                done(err);
+            }
         });
 
         xs.start();
@@ -102,14 +115,19 @@ describe('An example subscription', function() {
                 })
             })
             .subscribe(function(message) {
-                if (index === 0)
-                    message.state.should.eql("ok");
-                if (index === 1)
-                    message.state.should.eql("critical");
-                if (index === 2) {
-                    message.state.should.eql("ok");
-                    done();
+                try {
+                    if (index === 0)
+                        expect(message.state).to.equal("ok");
+                    if (index === 1)
+                        expect(message.state).to.equal("critical");
+                    if (index === 2) {
+                        expect(message.state).to.equal("ok");
+                        done();
+                    }
+                } catch (err) {
+                    done(err);
                 }
+
 
                 index++;
             });
@@ -173,19 +191,24 @@ describe('An example subscription', function() {
                     });
             })
             .subscribe(function(message) {
-                if (index === 0) {
-                    message.host.should.eql("host1");
-                    message.state.should.eql("critical");
+                try {
+                    if (index === 0) {
+                        expect(message.host).to.equal("host1");
+                        expect(message.state).to.equal("critical");
+                    }
+                    if (index === 1) {
+                        expect(message.host).to.equal("host1");
+                        expect(message.state).to.equal("ok");
+                    }
+                    if (index === 2) {
+                        expect(message.host).to.equal("host2");
+                        expect(message.state).to.equal("critical");
+                        done();
+                    }
+                } catch (err) {
+                    done(err);
                 }
-                if (index === 1) {
-                    message.host.should.eql("host1");
-                    message.state.should.eql("ok");
-                }
-                if (index === 2) {
-                    message.host.should.eql("host2");
-                    message.state.should.eql("critical");
-                    done();
-                }
+
 
                 index++;
             });
@@ -229,7 +252,6 @@ describe('An example subscription', function() {
             })
             .subscribe(function(message) {
                 //Output to Graphite or whatever here.
-                console.log(message);
                 index++;
                 if (index == 3) {
                     done();
