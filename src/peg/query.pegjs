@@ -29,7 +29,7 @@ WS =
     '\r' /
     '\n'    
 
-value = t / f / nil / NUMBER;
+value = t / f / nil / NUMBER / String;
 
 t   =   'true';
 f   =   'false';
@@ -40,7 +40,7 @@ INT =   sign:'-'? d:[0-9]+ { sign = sign || ''; return parseInt(sign + d.join(''
 FLOAT =   sign:'-'? a:([0-9]+) b:('.' [0-9]*) c:EXPONENT? { sign = sign || ''; return parseFloat(sign + a.join('') + b.join('') + c);  }
 EXPONENT = ('e'/'E') ('+'/'-')? [0-9]+ ;
 
-String = [a-z]*
+String = '"'chars:([^\\"])*'"' { return chars.join(''); }
 
 approximately_expr = field WS* APPROXIMATELY WS* value;
 regex_match_expr =   field WS* REGEX_MATCH WS* value;
